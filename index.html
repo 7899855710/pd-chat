@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<!-- This site is hosted on Netlify. Anyone can build and deploy a site
+     like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=5da38530-8ac4-4f61-96d4-8d95dedec2d3
+     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+<!-- This site is hosted on Netlify. Anyone can build and deploy a site
+     like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=5da38530-8ac4-4f61-96d4-8d95dedec2d3
+     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PD Chat</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- =========================================================
+     AUTH PAGE
+========================================================= -->
+
+<section id="authPage" class="auth-page">
+
+    <div class="auth-card">
+
+        <div class="auth-logo">
+            <div class="auth-logo-icon">💬</div>
+            <h1>PD Chat</h1>
+            <p>Chat • Connect • Share</p>
+        </div>
+
+        <div class="auth-form">
+
+            <div class="input-group">
+                <label for="name">Name</label>
+                <input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your name"
+                    autocomplete="name"
+                >
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <div class="auth-buttons">
+
+                <button
+                    id="loginBtn"
+                    type="button"
+                    class="primary-btn"
+                >
+                    Login
+                </button>
+
+                <button
+                    id="registerBtn"
+                    type="button"
+                    class="secondary-btn"
+                >
+                    Create Account
+                </button>
+
+            </div>
+
+            <div id="authMessage" class="auth-message"></div>
+
+            <p class="auth-note">
+                New accounts are checked by an admin before you can chat.
+                Admins can see your password to help you if you forget it,
+                so please don't reuse a password from another account.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- Shown to new people until an admin accepts them -->
+<section id="pendingPage" class="pending-page hidden">
+    <div class="auth-card pending-card">
+        <div class="auth-logo">
+            <div class="auth-logo-icon">⏳</div>
+            <h1>Almost there, <span id="pendingName">there</span>!</h1>
+            <p>Your account is waiting for an admin to accept it.</p>
+        </div>
+        <p class="pending-text">
+            You'll be let in automatically as soon as it is approved.
+            You can leave this page open or come back later.
+        </p>
+        <button id="pendingLogoutBtn" type="button" class="secondary-btn full-width">Log out</button>
+    </div>
+</section>
+
+
+<!-- =========================================================
+     MAIN APPLICATION
+========================================================= -->
+
+<section id="appPage" class="app-page hidden">
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <!-- My Profile -->
+        <div class="sidebar-profile">
+
+            <button
+                id="myProfileBtn"
+                class="profile-button"
+                type="button"
+                title="My profile"
+            >
+
+                <div
+                    id="myAvatar"
+                    class="avatar large-avatar"
+                >
+                    ?
+                </div>
+
+                <div class="profile-summary">
+
+                    <strong id="myName">
+                        User
+                    </strong>
+
+                    <small id="myStatus">
+                        Offline
+                    </small>
+
+                </div>
+
+            </button>
+
+            <div class="profile-actions">
+
+                <button
+                    id="settingsBtn"
+                    type="button"
+                    class="icon-btn"
+                    title="Settings"
+                >
+                    ⚙️
+                </button>
+
+                <button
+                    id="logoutBtn"
+                    type="button"
+                    class="icon-btn"
+                    title="Logout"
+                >
+                    ↪
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- Blocked Account Banner -->
+
+        <div
+            id="blockedBanner"
+            class="blocked-banner hidden"
+        >
+            Your account has been suspended by an admin. You can read chats but cannot send messages.
+        </div>
+
+
+        <!-- Search -->
+
+        <div class="search-box">
+
+            <span>🔎</span>
+
+            <input
+                id="searchInput"
+                type="search"
+                placeholder="Search people"
+                autocomplete="off"
+            >
+
+        </div>
+
+
+        <!-- Sidebar Navigation -->
+
+        <div class="sidebar-tabs">
+
+            <button
+                id="peopleTab"
+                type="button"
+                class="sidebar-tab active"
+            >
+                👤 People
+            </button>
+
+            <button
+                id="groupsTab"
+                type="button"
+                class="sidebar-tab"
+            >
+                👥 Groups
+            </button>
+
+        </div>
+
+
+        <!-- Sidebar Actions -->
+
+        <div class="sidebar-actions">
+
+            <button
+                id="newGroupBtn"
+                type="button"
+                class="small-action-btn"
+            >
+                ＋ Group
+            </button>
+
+            <button
+                id="adminPanelBtn"
+                type="button"
+                class="small-action-btn hidden"
+            >
+                👑 Admin
+            </button>
+
+        </div>
+
+
+        <!-- Users / Groups List -->
+
+        <div
+            id="usersList"
+            class="users-list"
+        ></div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         CHAT AREA
+    ====================================================== -->
+
+    <main class="chat-area">
+
+        <!-- Chat Header -->
+
+        <header class="chat-header">
+
+            <div class="chat-header-left">
+
+                <button
+                    id="backBtn"
+                    type="button"
+                    class="back-btn"
+                    title="Back"
+                >
+                    ←
+                </button>
+
+                <button
+                    id="chatProfileBtn"
+                    type="button"
+                    class="chat-profile-button"
+                    title="View profile"
+                >
+
+                    <div
+                        id="chatAvatar"
+                        class="avatar"
+                    >
+                        ?
+                    </div>
+
+                    <div class="chat-user-info">
+
+                        <strong id="chatName">
+                            Select a chat
+                        </strong>
+
+                        <small id="chatStatus">
+                            Choose a person or group
+                        </small>
+
+                    </div>
+
+                </button>
+
+            </div>
+
+
+            <!-- Call buttons -->
+
+            <div
+                id="directCallActions"
+                class="chat-header-actions"
+            >
+
+                <button
+                    id="audioCallBtn"
+                    type="button"
+                    class="icon-btn"
+                    title="Audio call"
+                >
+                    📞
+                </button>
+
+                <button
+                    id="videoCallBtn"
+                    type="button"
+                    class="icon-btn"
+                    title="Video call"
+                >
+                    📹
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- Typing indicator -->
+
+        <div
+            id="typingIndicator"
+            class="typing-indicator"
+        ></div>
+
+
+        <!-- Messages -->
+
+        <section
+            id="messages"
+            class="messages"
+        >
+
+            <div class="empty-chat">
+                Select someone from the sidebar to start chatting.
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             REPLY BAR
+        ================================================== -->
+
+        <div
+            id="replyBar"
+            class="reply-bar hidden"
+        >
+
+            <div class="reply-content">
+
+                <span class="reply-label">
+                    ↩ Replying to
+                </span>
+
+                <span id="replyText"></span>
+
+            </div>
+
+            <button
+                id="cancelReply"
+                type="button"
+                class="icon-btn"
+                title="Cancel reply"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- =================================================
+             MESSAGE COMPOSER
+        ================================================== -->
+
+        <div
+            id="composerBar"
+            class="composer-bar disabled"
+        >
+
+            <!-- Emoji -->
+
+            <button
+                id="emojiBtn"
+                type="button"
+                class="composer-btn"
+                title="Emoji"
+            >
+                😊
+            </button>
+
+
+            <!-- File -->
+
+            <button
+                id="fileBtn"
+                type="button"
+                class="composer-btn"
+                title="Send image/file"
+            >
+                📎
+            </button>
+
+            <input
+                id="fileInput"
+                type="file"
+                accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                hidden
+            >
+
+
+            <!-- Message -->
+
+            <input
+                id="messageInput"
+                type="text"
+                placeholder="Type a message..."
+                autocomplete="off"
+            >
+
+
+            <!-- Voice -->
+
+            <button
+                id="voiceBtn"
+                type="button"
+                class="composer-btn"
+                title="Voice message"
+            >
+                🎤
+            </button>
+
+
+            <!-- Send -->
+
+            <button
+                id="sendBtn"
+                type="button"
+                class="send-btn"
+                title="Send message"
+            >
+                ➤
+            </button>
+
+        </div>
+
+
+        <!-- =================================================
+             EMOJI / GIF / STICKER PICKER
+        ================================================== -->
+
+        <div
+            id="emojiPicker"
+            class="emoji-picker hidden"
+        >
+
+            <div class="picker-tabs">
+
+                <button
+                    type="button"
+                    data-tab="emoji"
+                    class="active"
+                >
+                    😊
+                </button>
+
+                <button
+                    type="button"
+                    data-tab="gif"
+                >
+                    GIF
+                </button>
+
+                <button
+                    type="button"
+                    data-tab="sticker"
+                >
+                    ⭐
+                </button>
+
+            </div>
+
+
+            <div class="emoji-search">
+
+                <input
+                    id="emojiSearch"
+                    type="search"
+                    placeholder="Search emoji"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div
+                id="emojiGrid"
+                class="emoji-grid"
+            ></div>
+
+
+            <div
+                id="gifGrid"
+                class="gif-grid hidden"
+            ></div>
+
+
+            <div
+                id="stickerGrid"
+                class="sticker-grid hidden"
+            ></div>
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         MY PROFILE PANEL
+    ====================================================== -->
+
+    <section
+        id="profilePanel"
+        class="side-panel profile-panel hidden"
+    >
+
+        <div class="panel-header">
+
+            <button
+                id="closeProfileBtn"
+                type="button"
+                class="icon-btn"
+            >
+                ←
+            </button>
+
+            <h2>My Profile</h2>
+
+        </div>
+
+
+        <div class="profile-edit-area">
+
+            <!-- Profile Picture -->
+
+            <div class="profile-picture-section">
+
+                <div
+                    id="profileAvatarPreview"
+                    class="profile-avatar-large"
+                >
+                    ?
+                </div>
+
+                <label
+                    for="profileImageInput"
+                    class="change-photo-btn"
+                >
+                    📷 Change photo
+                </label>
+
+                <input
+                    id="profileImageInput"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                >
+
+            </div>
+
+
+            <!-- Name -->
+
+            <div class="input-group">
+
+                <label for="profileName">
+                    Name
+                </label>
+
+                <input
+                    id="profileName"
+                    type="text"
+                    placeholder="Your name"
+                    maxlength="50"
+                >
+
+            </div>
+
+
+            <!-- Bio -->
+
+            <div class="input-group">
+
+                <label for="profileBio">
+                    About
+                </label>
+
+                <textarea
+                    id="profileBio"
+                    rows="4"
+                    maxlength="160"
+                    placeholder="Tell people something about you..."
+                ></textarea>
+
+            </div>
+
+
+            <!-- Email -->
+
+            <div class="input-group">
+
+                <label>
+                    Email
+                </label>
+
+                <div
+                    id="profileEmail"
+                    class="readonly-field"
+                >
+                    —
+                </div>
+
+            </div>
+
+
+            <button
+                id="saveProfileBtn"
+                type="button"
+                class="primary-btn full-width"
+            >
+                Save Profile
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         OTHER USER PROFILE
+    ====================================================== -->
+
+    <section
+        id="userProfilePanel"
+        class="side-panel user-profile-panel hidden"
+    >
+
+        <div class="panel-header">
+
+            <button
+                id="closeUserProfileBtn"
+                type="button"
+                class="icon-btn"
+            >
+                ←
+            </button>
+
+            <h2>Profile</h2>
+
+        </div>
+
+
+        <div class="public-profile">
+
+            <div
+                id="publicProfileAvatar"
+                class="profile-avatar-large"
+            >
+                ?
+            </div>
+
+            <h2 id="publicProfileName">
+                User
+            </h2>
+
+            <div
+                id="publicProfileStatus"
+                class="profile-status"
+            >
+                Offline
+            </div>
+
+            <p
+                id="publicProfileBio"
+                class="profile-bio"
+            >
+                No bio yet.
+            </p>
+
+            <div
+                id="publicProfileEmail"
+                class="profile-email"
+            ></div>
+
+            <button
+                id="messageProfileBtn"
+                type="button"
+                class="primary-btn full-width"
+            >
+                💬 Message
+            </button>
+
+            <button
+                id="blockUserBtn"
+                type="button"
+                class="secondary-btn full-width block-contact-btn hidden"
+            >
+                🚫 Block contact
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         SETTINGS PANEL
+    ====================================================== -->
+
+    <section
+        id="settingsPanel"
+        class="side-panel settings-panel hidden"
+    >
+
+        <div class="panel-header">
+
+            <button
+                id="closeSettingsBtn"
+                type="button"
+                class="icon-btn"
+            >
+                ←
+            </button>
+
+            <h2>Settings</h2>
+
+        </div>
+
+
+        <div class="settings-content">
+
+            <div class="settings-section">
+
+                <h3>Profile</h3>
+
+                <div class="input-group">
+
+                    <label for="settingsName">
+                        Display name
+                    </label>
+
+                    <input
+                        id="settingsName"
+                        type="text"
+                        placeholder="Your name"
+                    >
+
+                </div>
+
+                <button
+                    id="openProfileFromSettings"
+                    type="button"
+                    class="secondary-btn full-width"
+                >
+                    👤 Edit Profile & Photo
+                </button>
+
+            </div>
+
+
+            <div class="settings-section">
+
+                <h3>Appearance</h3>
+
+                <div class="input-group">
+
+                    <label for="themeSelect">
+                        Theme
+                    </label>
+
+                    <select id="themeSelect">
+
+                        <option value="light">
+                            Light
+                        </option>
+
+                        <option value="dark">
+                            Dark
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="settings-section">
+
+                <h3>Change Password</h3>
+
+                <div class="input-group">
+
+                    <label for="currentPasswordInput">
+                        Current password
+                    </label>
+
+                    <input
+                        id="currentPasswordInput"
+                        type="password"
+                        placeholder="Current password"
+                        autocomplete="current-password"
+                    >
+
+                </div>
+
+                <div class="input-group">
+
+                    <label for="newPasswordInput">
+                        New password
+                    </label>
+
+                    <input
+                        id="newPasswordInput"
+                        type="password"
+                        placeholder="New password (min 6 characters)"
+                        autocomplete="new-password"
+                    >
+
+                </div>
+
+                <div class="input-group">
+
+                    <label for="confirmPasswordInput">
+                        Confirm new password
+                    </label>
+
+                    <input
+                        id="confirmPasswordInput"
+                        type="password"
+                        placeholder="Confirm new password"
+                        autocomplete="new-password"
+                    >
+
+                </div>
+
+                <button
+                    id="changePasswordBtn"
+                    type="button"
+                    class="secondary-btn full-width"
+                >
+                    Change Password
+                </button>
+
+                <p id="passwordChangeMessage" class="settings-message"></p>
+
+            </div>
+
+
+            <div class="settings-section">
+
+                <h3>Notifications</h3>
+
+                <label class="toggle-row">
+
+                    <span>
+                        Desktop notifications
+                    </span>
+
+                    <input
+                        id="notifyToggle"
+                        type="checkbox"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <button
+                id="saveSettings"
+                type="button"
+                class="primary-btn full-width"
+            >
+                Save Settings
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         GROUP CREATION / GROUP INFO
+    ====================================================== -->
+
+    <section id="groupPanel" class="side-panel group-panel hidden">
+        <div class="panel-header">
+            <button id="closeGroupBtn" type="button" class="icon-btn" aria-label="Back">←</button>
+            <div>
+                <h2>New group</h2>
+                <small id="groupCreateCount">0 participants selected</small>
+            </div>
+        </div>
+
+        <div class="group-form whatsapp-group-create">
+            <div class="group-create-hero">
+                <label class="group-photo-picker" for="groupPhotoInput" title="Add group photo">
+                    <div id="groupPhotoPreview" class="group-photo-preview">📷</div>
+                    <span>Add group icon</span>
+                </label>
+                <input id="groupPhotoInput" type="file" accept="image/*" hidden>
+                <div class="group-create-fields">
+                    <div class="input-group">
+                        <label for="groupName">Group subject</label>
+                        <input id="groupName" type="text" placeholder="Group subject" maxlength="60">
+                    </div>
+                    <div class="input-group">
+                        <label for="groupAbout">Group description</label>
+                        <textarea id="groupAbout" rows="2" maxlength="160" placeholder="Optional group description"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div id="selectedGroupMembers" class="selected-member-chips"></div>
+
+            <div class="group-member-search">
+                <span>🔎</span>
+                <input id="groupMemberSearch" type="search" placeholder="Search people" autocomplete="off">
+            </div>
+
+            <div class="group-picker-label">Add participants</div>
+            <div id="groupMembers" class="group-member-list"></div>
+
+            <div class="group-create-footer">
+                <span id="groupCreateHint">Choose at least one participant</span>
+                <button id="createGroupBtn" type="button" class="group-next-btn" aria-label="Create group">➜</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="groupInfoPanel" class="side-panel group-info-panel hidden">
+        <div class="panel-header">
+            <button id="closeGroupInfoBtn" type="button" class="icon-btn" aria-label="Back">←</button>
+            <h2>Group info</h2>
+        </div>
+        <div class="group-info-content">
+            <div class="group-info-hero">
+                <div id="groupInfoAvatar" class="profile-avatar-large group-info-avatar">G</div>
+                <h2 id="groupInfoName">Group</h2>
+                <p id="groupInfoAbout" class="profile-bio">No group description.</p>
+                <div id="groupInfoCount" class="profile-status">0 participants</div>
+            </div>
+
+            <div class="group-info-actions">
+                <button id="editGroupInfoBtn" type="button" class="group-info-action">✏️<span>Edit group info</span></button>
+                <button id="addGroupMembersBtn" type="button" class="group-info-action">➕<span>Add participants</span></button>
+            </div>
+
+            <div class="settings-section">
+                <h3>Group permissions</h3>
+                <label class="group-setting-row"><span><strong>Edit group info</strong><small>Who can change the name, photo and description</small></span><select id="groupEditPermission"><option value="all">All participants</option><option value="admins">Admins only</option></select></label>
+                <label class="group-setting-row"><span><strong>Send messages</strong><small>Choose who can send messages</small></span><select id="groupSendPermission"><option value="all">All participants</option><option value="admins">Admins only</option></select></label>
+                <label class="group-setting-row"><span><strong>Add participants</strong><small>Choose who can add people</small></span><select id="groupAddPermission"><option value="all">All participants</option><option value="admins">Admins only</option></select></label>
+                <button id="saveGroupSettingsBtn" type="button" class="secondary-btn full-width">Save group settings</button>
+            </div>
+
+            <div class="settings-section">
+                <div class="group-participants-heading"><h3 id="groupParticipantsTitle">Participants</h3><input id="groupParticipantSearch" type="search" placeholder="Search"></div>
+                <div id="groupParticipantsList" class="group-participants-list"></div>
+            </div>
+
+            <button id="leaveGroupBtn" type="button" class="danger-row-btn">🚪 Exit group</button>
+        </div>
+    </section>
+
+    <section id="groupAddMembersPanel" class="side-panel hidden">
+        <div class="panel-header"><button id="closeGroupAddMembersBtn" type="button" class="icon-btn">←</button><div><h2>Add participants</h2><small id="groupAddCount">0 selected</small></div></div>
+        <div class="group-form">
+            <div id="selectedAddMembers" class="selected-member-chips"></div>
+            <div class="group-member-search"><span>🔎</span><input id="groupAddSearch" type="search" placeholder="Search people"></div>
+            <div id="groupAddMembersList" class="group-member-list"></div>
+            <button id="confirmAddMembersBtn" type="button" class="primary-btn full-width">Add participants</button>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         ADMIN PANEL
+    ====================================================== -->
+
+    <section
+        id="adminPanel"
+        class="side-panel admin-panel hidden"
+    >
+
+        <div class="panel-header">
+
+            <button
+                id="closeAdminBtn"
+                type="button"
+                class="icon-btn"
+            >
+                ←
+            </button>
+
+            <h2>Admin Panel</h2>
+
+        </div>
+
+
+        <div class="admin-statistics">
+
+            <div class="admin-stat">
+
+                <strong id="totalUsers">
+                    0
+                </strong>
+
+                <span>
+                    Total Users
+                </span>
+
+            </div>
+
+
+            <div class="admin-stat">
+
+                <strong id="onlineUsers">
+                    0
+                </strong>
+
+                <span>
+                    Online
+                </span>
+
+            </div>
+
+
+            <div class="admin-stat">
+
+                <strong id="blockedUsers">
+                    0
+                </strong>
+
+                <span>
+                    Suspended
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div id="pendingRequests" class="pending-requests hidden"></div>
+
+        <div
+            id="adminUsersList"
+            class="admin-users-list"
+        ></div>
+
+    </section>
+
+
+    <!-- =====================================================
+         INCOMING CALL
+    ====================================================== -->
+
+    <div
+        id="incomingCall"
+        class="incoming-call hidden"
+    >
+
+        <div class="incoming-call-card">
+
+            <div class="incoming-call-icon">
+                📞
+            </div>
+
+            <h3 id="incomingTitle">
+                Incoming call
+            </h3>
+
+            <div class="incoming-call-actions">
+
+                <button
+                    id="acceptCallBtn"
+                    type="button"
+                    class="accept-call-btn"
+                >
+                    ✓ Accept
+                </button>
+
+                <button
+                    id="rejectCallBtn"
+                    type="button"
+                    class="reject-call-btn"
+                >
+                    ✕ Reject
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CALL WINDOW
+    ====================================================== -->
+
+    <div
+        id="callWindow"
+        class="call-window hidden"
+    >
+
+        <div class="call-header">
+
+            <div>
+
+                <strong id="callTitle">
+                    Call
+                </strong>
+
+                <small id="callState">
+                    Calling...
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <div class="call-videos">
+
+            <video
+                id="remoteVideo"
+                autoplay
+                playsinline
+            ></video>
+
+            <video
+                id="localVideo"
+                autoplay
+                muted
+                playsinline
+            ></video>
+
+            <audio
+                id="remoteAudio"
+                autoplay
+            ></audio>
+
+        </div>
+
+
+        <div class="call-controls">
+
+            <button
+                id="muteCallBtn"
+                type="button"
+                class="call-control-btn"
+                title="Mute"
+            >
+                🎤
+            </button>
+
+            <button
+                id="cameraCallBtn"
+                type="button"
+                class="call-control-btn"
+                title="Camera"
+            >
+                📹
+            </button>
+
+            <button
+                id="endCallBtn"
+                type="button"
+                class="end-call-btn"
+                title="End call"
+            >
+                ☎
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TOAST
+    ====================================================== -->
+
+    <div
+        id="toast"
+        class="toast"
+        role="status"
+    ></div>
+
+</section>
+
+
+<!-- =========================================================
+     FIREBASE / APPLICATION JAVASCRIPT
+========================================================= -->
+
+<script
+    type="module"
+    src="app.js"
+></script>
+<link rel="stylesheet" href="style.css">
+
+<script async src="/.netlify/scripts/ar" data-netlify-deploy-id="6abd282025ce9544b84b9559" data-netlify-site-id="5da38530-8ac4-4f61-96d4-8d95dedec2d3" data-agent-runner-id="6abd23bb0522f0212f0fc3fc"></script>
+</body>
+</html>

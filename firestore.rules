@@ -1,0 +1,243 @@
+rules_version = '2';
+
+// PD Chat security rules.
+// BEFORE publishing: in Firebase Console > Firestore > Rules, copy your current
+// rules somewhere safe so you can roll back. Then test in the Rules Playground.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    // The two super admins. If you ever change this list, change SUPER_ADMIN_EMAILS
+    // in app.js and the SUPER_ADMIN_EMAILS variable in Netlify as well.
+    function superEmails() {
+      return [
+        'pradeepgcrathod655@gmail.com',
+        'patil.kaustubh.school@gmail.com'
+      ];
+    }
+
+    function isSuperAdmin() {
+      return signedIn()
+        && ('email' in request.auth.token)
+        && request.auth.token.email.lower() in superEmails();
+    }
+
+    function myDocPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function hasMyDoc() {
+      return exists(myDocPath());
+    }
+
+    function me() {
+      return get(myDocPath()).data;
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || (hasMyDoc() && me().get('admin', false) == true);
+    }
+
+    // Approved by an admin and not removed. People whose profile has no
+    // "approved" field were here before approval existed, so they count.
+    function isMember() {
+      return isSuperAdmin()
+        || (hasMyDoc()
+            && me().get('approved', true) != false
+            && me().get('removed', false) != true);
+    }
+
+    // A member who has not been suspended by an admin.
+    function canSend() {
+      return isMember()
+        && (isSuperAdmin() || me().get('blocked', false) != true);
+    }
+
+    function inChat(chatId) {
+      return signedIn() && uid() in chatId.split('_');
+    }
+
+    // ------------------------------------------------------------------
+    // Profiles
+    // ------------------------------------------------------------------
+    match /users/{userId} {
+
+      allow read: if signedIn() && (userId == uid() || isMember());
+
+      // A new person can only create their own profile, as "not approved yet"
+      // (super admins start approved).
+      allow create: if signedIn()
+        && userId == uid()
+        && request.resource.data.keys().hasOnly([
+             'uid', 'name', 'email', 'approved', 'status', 'blocked',
+             'createdAt', 'bio', 'photoURL'
+           ])
+        && request.resource.data.uid == userId
+        && request.resource.data.email.lower() == request.auth.token.email.lower()
+        && request.resource.data.get('blocked', false) == false
+        && request.resource.data.approved == isSuperAdmin();
+
+      allow update: if signedIn() && (
+        // 1) A person editing their own profile (never the admin-controlled fields).
+        (userId == uid()
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+               'admin', 'blocked', 'removed', 'removedAt', 'removedBy',
+               'approved', 'approvedAt', 'approvedBy', 'email', 'uid'
+             ]))
+        // 2) Super admins can change anything.
+        || isSuperAdmin()
+        // 3) Admins manage ordinary accounts only: never themselves, never
+        //    another admin, never a super admin.
+        || (isAdmin()
+            && userId != uid()
+            && resource.data.get('admin', false) != true
+            && !(resource.data.get('email', '').lower() in superEmails())
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                 'approved', 'approvedAt', 'approvedBy',
+                 'blocked', 'removed', 'removedAt', 'removedBy',
+                 'admin', 'status'
+               ]))
+      );
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // Private per-person data (who I blocked). Only I can see it.
+    // ------------------------------------------------------------------
+    match /userPrivate/{userId} {
+      allow read: if signedIn() && userId == uid();
+      allow create, update: if signedIn()
+        && userId == uid()
+        && request.resource.data.keys().hasOnly(['blocked']);
+    }
+
+    // ------------------------------------------------------------------
+    // One-to-one chats: only the two people (and super admins) can read.
+    // The chat id is the two uids joined by "_".
+    // ------------------------------------------------------------------
+    match /chats/{chatId} {
+
+      allow read: if signedIn()
+        && (uid() in resource.data.participants || isSuperAdmin());
+
+      allow create: if canSend()
+        && inChat(chatId)
+        && request.resource.data.participants.size() == 2
+        && uid() in request.resource.data.participants;
+
+      allow update: if signedIn()
+        && uid() in resource.data.participants
+        && request.resource.data.participants == resource.data.participants;
+
+      allow delete: if isSuperAdmin();
+
+      match /messages/{messageId} {
+        allow read: if inChat(chatId) || isSuperAdmin();
+
+        allow create: if canSend()
+          && inChat(chatId)
+          && request.resource.data.senderId == uid()
+          && request.resource.data.createdAt == request.time;
+
+        // The sender can edit/delete their own message. The other person can
+        // only react, pin, or hide it for themselves.
+        allow update: if inChat(chatId) && (
+          (resource.data.senderId == uid()
+            && request.resource.data.senderId == resource.data.senderId
+            && request.resource.data.createdAt == resource.data.createdAt)
+          || request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['reactions', 'pinned', 'deletedFor'])
+        );
+
+        allow delete: if signedIn()
+          && (resource.data.senderId == uid() || isSuperAdmin());
+      }
+
+      match /calls/{callId} {
+        allow read, write: if inChat(chatId);
+
+        match /candidates/{candidateId} {
+          allow read, write: if inChat(chatId);
+        }
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // Groups: members (and super admins) only.
+    // ------------------------------------------------------------------
+    match /groups/{groupId} {
+
+      allow read: if signedIn()
+        && (uid() in resource.data.members || isSuperAdmin());
+
+      allow create: if canSend()
+        && uid() in request.resource.data.members
+        && request.resource.data.ownerId == uid()
+        && uid() in request.resource.data.get('admins', [uid()]);
+
+      function groupAdmins() {
+        return resource.data.get('admins', [resource.data.ownerId]);
+      }
+
+      function isGroupAdmin() {
+        return isSuperAdmin() || uid() in groupAdmins();
+      }
+
+      // Members may update the last-message preview. Group administration and
+      // permission changes require a group admin. Adding members follows the
+      // group's addMembers permission.
+      allow update: if signedIn() && uid() in resource.data.members && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage', 'lastMessageAt'])
+        || isGroupAdmin()
+        || (resource.data.get('settings', {}).get('editInfo', 'all') == 'all'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'about', 'photoURL']))
+        || (resource.data.get('settings', {}).get('addMembers', 'all') == 'all'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']))
+      );
+
+      allow delete: if signedIn()
+        && (resource.data.ownerId == uid() || isSuperAdmin());
+
+      match /messages/{messageId} {
+        function groupMembers() {
+          return get(/databases/$(database)/documents/groups/$(groupId)).data.members;
+        }
+
+        allow read: if signedIn() && (uid() in groupMembers() || isSuperAdmin());
+
+        allow create: if canSend()
+          && uid() in groupMembers()
+          && request.resource.data.senderId == uid()
+          && request.resource.data.createdAt == request.time
+          && (
+            get(/databases/$(database)/documents/groups/$(groupId)).data.get('settings', {}).get('sendMessages', 'all') == 'all'
+            || uid() in get(/databases/$(database)/documents/groups/$(groupId)).data.get('admins', [get(/databases/$(database)/documents/groups/$(groupId)).data.ownerId])
+            || isSuperAdmin()
+          );
+
+        allow update: if signedIn() && uid() in groupMembers() && (
+          (resource.data.senderId == uid()
+            && request.resource.data.senderId == resource.data.senderId
+            && request.resource.data.createdAt == resource.data.createdAt)
+          || request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['reactions', 'pinned', 'deletedFor'])
+        );
+
+        allow delete: if signedIn()
+          && (resource.data.senderId == uid() || isSuperAdmin());
+      }
+    }
+  }
+}
